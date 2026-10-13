@@ -1,6 +1,6 @@
 #!/bin/bash
 # Usage: build.sh <versionCode> <versionName> <out.apk>
-BT=/tmp/sdk/android-14; AJ=/tmp/sdk/android-34/android.jar; export PATH=$BT:$PATH
+SDK=${SDK:-/tmp/sdk}; BT=$SDK/android-14; AJ=$SDK/android-34/android.jar; export PATH=$BT:$PATH
 B=/tmp/build_t2d; rm -rf $B; mkdir -p $B/classes $B/dex
 cd "$(dirname "$0")"
 aapt2 compile --dir res -o $B/res.zip 2>&1 | grep -v JAVA_TOOL
