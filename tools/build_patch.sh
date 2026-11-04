@@ -5,11 +5,11 @@
 set -e
 SDK=${SDK:-/tmp/sdk}; BT=$SDK/android-14; AJ=$SDK/android-34/android.jar; export PATH=$BT:$PATH
 R=$(cd "$(dirname "$0")/.." && pwd); W=$(mktemp -d); cd $W
-cp -r $R/src/smali ap_smali; mkdir ap; mv ap_smali ap/smali; cp $R/src/apktool.yml ap/
+cp -r $R/${REL:-releases/4.53}/src/smali ap_smali; mkdir ap; mv ap_smali ap/smali; cp $R/${REL:-releases/4.53}/src/apktool.yml ap/
 java -jar ${APKTOOL:-apktool.jar} b -f -o rebuilt.apk ap
-mkdir fo fd; javac -nowarn -source 8 -target 8 -bootclasspath $AJ -d fo $R/src/fix/com/titanraid/game2d/Fix.java $R/src/fix_stubs/com/titanraid/game2d/*.java
+mkdir fo fd; javac -nowarn -source 8 -target 8 -bootclasspath $AJ -d fo $R/${REL:-releases/4.53}/src/fix/com/titanraid/game2d/Fix.java $R/${REL:-releases/4.53}/src/fix_stubs/com/titanraid/game2d/*.java
 rm fo/com/titanraid/game2d/{Dim,GameLog,BossView,HellBosses}*.class; d8 --lib $AJ --min-api 21 --output fd fo/com/titanraid/game2d/Fix.class
-mkdir pk; cd pk; cp -r $R/src/apk_resources/. .
+mkdir pk; cd pk; cp -r $R/${REL:-releases/4.53}/src/apk_resources/. .
 unzip -qo ../rebuilt.apk classes.dex; cp ../fd/classes.dex classes2.dex
 python3 - "$1" "$2" "${OLD_CODE:-451}" "${OLD_NAME:-4.51}" <<'P'
 import struct,sys
