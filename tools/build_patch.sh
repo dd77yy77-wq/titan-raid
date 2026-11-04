@@ -1,5 +1,6 @@
 #!/bin/bash
 # Пересборка из src/: ./tools/build_patch.sh <versionCode> <versionName> <keystore> <out.apk>
+# BASE_APK — любой APK игры (ресурсы, манифест, assets); OLD_CODE/OLD_NAME — версия внутри него.
 # Нужны: apktool.jar, SDK (SDK=/path с android-14 и android-34), TITAN_RAID_2D.apk (база для ресурсов).
 set -e
 SDK=${SDK:-/tmp/sdk}; BT=$SDK/android-14; AJ=$SDK/android-34/android.jar; export PATH=$BT:$PATH
@@ -10,12 +11,15 @@ mkdir fo fd; javac -nowarn -source 8 -target 8 -bootclasspath $AJ -d fo $R/src/f
 rm fo/com/titanraid/game2d/{Dim,GameLog,BossView,HellBosses}*.class; d8 --lib $AJ --min-api 21 --output fd fo/com/titanraid/game2d/Fix.class
 mkdir pk; cd pk; unzip -q ${BASE_APK:-$R/TITAN_RAID_2D.apk}; rm -rf META-INF
 unzip -qo ../rebuilt.apk classes.dex; cp ../fd/classes.dex classes2.dex
-python3 - "$1" "$2" <<'P'
-import struct,sys,re
+python3 - "$1" "$2" "${OLD_CODE:-452}" "${OLD_NAME:-4.52}" <<'P'
+import struct,sys
+nc,nn,oc,on=int(sys.argv[1]),sys.argv[2],int(sys.argv[3]),sys.argv[4]
+assert len(nn)==len(on), "длина versionName должна совпадать"
 m=bytearray(open('AndroidManifest.xml','rb').read())
-oc=int(re.search(r'versionCode: (\d+)',open('/dev/null').read() or '0') or 0) if False else None
+m=m.replace(struct.pack('<I',oc),struct.pack('<I',nc),1)
+m=m.replace(on.encode('utf-16-le'),nn.encode('utf-16-le'),1)
+open('AndroidManifest.xml','wb').write(m)
 P
-echo "Подставьте versionCode/versionName в AndroidManifest.xml (бинарно), см. историю сборки 4.52"
 zip -q -X -0 ../u.apk resources.arsc; zip -q -X -r ../u.apk . -x resources.arsc; cd ..
 zipalign -f -p 4 u.apk a.apk
 apksigner sign --ks "$3" --ks-pass pass:android --key-pass pass:android --out "$4" a.apk
