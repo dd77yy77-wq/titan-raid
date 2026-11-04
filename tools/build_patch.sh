@@ -20,6 +20,6 @@ m=m.replace(struct.pack('<I',oc),struct.pack('<I',nc),1)
 m=m.replace(on.encode('utf-16-le'),nn.encode('utf-16-le'),1)
 open('AndroidManifest.xml','wb').write(m)
 P
-zip -q -X -0 ../u.apk resources.arsc; zip -q -X -r ../u.apk . -x resources.arsc; cd ..
+zip -q -X -0 ../u.apk resources.arsc $(find res -name "*.png" -o -path "res/raw/*" | sort); zip -q -X -r ../u.apk . -x resources.arsc "res/raw/*" "*.png"; cd ..
 zipalign -f -p 4 u.apk a.apk
 apksigner sign --ks "$3" --ks-pass pass:android --key-pass pass:android --out "$4" a.apk
